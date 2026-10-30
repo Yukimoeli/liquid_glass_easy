@@ -44,7 +44,8 @@ class LiquidGlassShapeCache {
 
   /// A texture larger than this, in fragment px, is not baked: the shape is
   /// evaluated per pixel instead.
-  static const int maxTexels = 4 << 20;
+  /// RGBA32F 每像素占 16 字节，保持单张纹理名义上的 16 MiB 预算。
+  static const int maxTexels = 1 << 20;
 
   static final Map<Object, LiquidGlassShapeBake> _bakes =
       <Object, LiquidGlassShapeBake>{};
@@ -102,7 +103,9 @@ class LiquidGlassShapeCache {
         ..blendMode = BlendMode.src,
     );
     final ui.Picture picture = recorder.endRecording();
-    final ui.Image image = picture.toImageSync(width, height);
+    // 几何缓存保存精确数值，不能经过默认颜色目标可能启用的有损压缩。
+    final ui.Image image = picture.toImageSync(width, height,
+        targetFormat: ui.TargetPixelFormat.rgbaFloat32);
     picture.dispose();
     return image;
   }
